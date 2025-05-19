@@ -1,0 +1,25 @@
+
+Future<AuthResponse> _googleSignIn() async {
+  const clientId = '451513218091-qtdjp0jnbk9o2l91qvfkdtmmoq0ic941.apps.googleusercontent.com';
+  final signInOption = GoogleSignIn(serverClientId: clientId);
+
+  final googleUser = await signInOption.signIn();
+  if (googleUser == null) {
+    debugPrint('User cancelled the sign-in');
+  };
+
+  final googleAuth = await googleUser!.authentication;
+  final accessToken = googleAuth.accessToken;
+  final idToken = googleAuth.idToken;
+
+  if (accessToken == null || idToken == null) {
+    debugPrint('Failed to get access token or ID token');
+  }
+
+  return Supabase.auth.signInWithIdToken(
+    provider: Provider.google,
+    idToken: idToken,
+    accessToken: accessToken,
+  );
+
+}
