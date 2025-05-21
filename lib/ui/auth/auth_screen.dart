@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moneywise/data/repo/authRepo.dart';
+import 'package:moneywise/data/repo/auth-repo.dart';
 import 'package:moneywise/theme/app_colors.dart';
 
 class AuthScreen extends StatelessWidget {

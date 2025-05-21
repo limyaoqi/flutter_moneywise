@@ -11,7 +11,7 @@ class PaymentFilterBar extends StatefulWidget {
 
 class _PaymentFilterBarState extends State<PaymentFilterBar> {
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'TNG', 'Cash', 'Credit'];
+  final List<String> _filters = ['All', 'TNG', 'Cash', 'Bank'];
 
   @override
   Widget build(BuildContext context) {

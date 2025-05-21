@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:moneywise/theme/app_colors.dart';
-import 'package:moneywise/ui/category/categories_screen.dart';
+import 'package:moneywise/ui/category/category_screen.dart';
 import 'package:moneywise/ui/home/expense/expense_screen.dart';
 import 'package:moneywise/ui/home/income/income_screen.dart';
 import 'package:moneywise/widget/filterbar/payment_filter_bar.dart';

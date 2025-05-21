@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:moneywise/data/repo/auth-repo.dart';
 import 'package:moneywise/ui/auth/auth_screen.dart';
 import 'package:moneywise/ui/home/home_screen.dart';
 
@@ -41,6 +42,7 @@ class Navigation {
 // This is useful for updating the UI when the authentication state changes.
 class AuthNotifier extends ChangeNotifier {
   User? _user;
+  final repo = Authrepo();
 
   AuthNotifier() {
     FirebaseAuth.instance.authStateChanges().listen((user) {

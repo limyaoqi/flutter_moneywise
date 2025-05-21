@@ -66,6 +66,7 @@ flutter:
   assets:
     - .env
     - assets/income.png
+    - assets/icons/categories/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

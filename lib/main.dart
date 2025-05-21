@@ -1,9 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:go_router/go_router.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moneywise/firebase_options.dart';
 import 'package:moneywise/nav/navigation.dart';
 
@@ -35,41 +32,5 @@ class MyApp extends StatelessWidget {
     //   theme: ThemeData(primarySwatch: Colors.blue),
     //   home: LoginPage(),
     // );
-  }
-}
-
-
-class HomePage extends StatelessWidget {
-  final User user;
-  const HomePage({super.key, required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Welcome')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              backgroundImage: NetworkImage(user.photoURL ?? ''),
-              radius: 40,
-            ),
-            SizedBox(height: 16),
-            Text('Name: ${user.displayName}'),
-            Text('Email: ${user.email}'),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-                await GoogleSignIn().signOut();
-                Navigator.pop(context);
-              },
-              child: Text('Logout'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
