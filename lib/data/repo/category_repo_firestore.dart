@@ -17,7 +17,7 @@ class CategoryRepoFirestore {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Get collection reference for current user's transactions
-  CollectionReference<Map<String, dynamic>> get _CategoryCollection {
+  CollectionReference<Map<String, dynamic>> get _categoryCollection {
     final userId = _auth.currentUser?.uid;
     if (userId == null) {
       throw Exception('User not authenticated');
@@ -26,7 +26,7 @@ class CategoryRepoFirestore {
   }
 
   Stream<List<Category>> getCategories() {
-    return _CategoryCollection.snapshots().map((snapshot) {
+    return _categoryCollection.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
         return Category.fromMap(data);
@@ -35,7 +35,7 @@ class CategoryRepoFirestore {
   }
 
  Future<Category?> getCategoryById(String id) async {
-    final doc = await _CategoryCollection.doc(id).get();
+    final doc = await _categoryCollection.doc(id).get();
     if (doc.exists) {
       return Category.fromMap(doc.data()!);
     }
@@ -43,14 +43,14 @@ class CategoryRepoFirestore {
   }
 
   Future<void> addCategory(Category category) async {
-    await _CategoryCollection.add(category.toMap());
+    await _categoryCollection.add(category.toMap());
   }
 
   Future<void> updateCategory(Category category) async {
-    await _CategoryCollection.doc(category.id).update(category.toMap());
+    await _categoryCollection.doc(category.id).update(category.toMap());
   }
 
   Future<void> deleteCategory(String id) async {
-    await _CategoryCollection.doc(id).delete();
+    await _categoryCollection.doc(id).delete();
   } 
 }

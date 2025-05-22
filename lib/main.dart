@@ -18,15 +18,14 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-     return MaterialApp.router(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        ),
-        routerConfig: Navigation.routes,
-        // home: const Myhomepage(),
-      );
+    return MaterialApp.router(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
+      routerConfig: Navigation.routes,
+      // home: const Myhomepage(),
+    );
     // return MaterialApp(
     //   title: 'Google Sign-In Demo',
     //   theme: ThemeData(primarySwatch: Colors.blue),

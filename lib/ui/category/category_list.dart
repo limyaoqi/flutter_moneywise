@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:moneywise/data/model/category.dart';
+import 'package:moneywise/data/repo/category_repo_firestore.dart';
+import 'package:moneywise/utils/color_utils.dart';
 
 class CategoriesList extends StatefulWidget {
   const CategoriesList({super.key});
@@ -13,89 +16,122 @@ class CategoriesList extends StatefulWidget {
 }
 
 class _CategoriesListState extends State<CategoriesList> {
-  // Sample category data - replace with your actual data source
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'Food', 'color': Colors.red, 'icon': 'assets/icons/categories/food.png', 'type': 'expense'},
-    {'name': 'Transportation', 'color': Colors.blue, 'icon': 'assets/icons/categories/transportation.png', 'type': 'expense'},
-    {'name': 'Entertainment', 'color': Colors.green, 'icon': 'assets/icons/categories/entertainment.png', 'type': 'expense'},
-    {'name': 'Shopping', 'color': Colors.orange, 'icon': 'assets/icons/categories/shopping-cart.png', 'type': 'expense'},
-    {'name': 'Bills', 'color': Colors.purple, 'icon': 'assets/icons/categories/bill.png', 'type': 'expense'},
-    {'name': 'Health', 'color': Colors.teal, 'icon': 'assets/icons/categories/healthcare.png', 'type': 'expense'},
-    {'name': 'Education', 'color': Colors.amber, 'icon': 'assets/icons/categories/education.png', 'type': 'expense'},
-    {'name': 'Salary', 'color': Colors.green, 'icon': 'assets/icons/categories/salary.png', 'type': 'income'},
-    {'name': 'Business', 'color': Colors.blue, 'icon': 'assets/icons/categories/business.png', 'type': 'income'},
-    {'name': 'Investment', 'color': Colors.purple, 'icon': 'assets/icons/categories/investment.png', 'type': 'income'},
-  ];
-
+  final CategoryRepoFirestore _categoryRepo = CategoryRepoFirestore();
   // Selected type filter (null for all categories, 'income' or 'expense' for specific types)
   String? _selectedType;
 
-  // Method to add a new category
-  void addCategory(Map<String, dynamic> category) {
+  // Method to filter categories by type
+  void setTypeFilter(String? type) {
     setState(() {
-      _categories.add(category);
+      _selectedType = type;
     });
+  }
+
+  // Method to add a new category
+  Future<void> addCategory(Category category) async {
+    await _categoryRepo.addCategory(category);
+  }
+
+  // Method to delete category
+  Future<void> deleteCategory(String id) async {
+    await _categoryRepo.deleteCategory(id);
+  }
+
+  // Handler for when edit button is pressed
+  void _handleEditCategory(Category category) {
+    // Edit category functionality
+    // To be implemented
+  }
+
+  // Build the category icon
+  Widget _buildCategoryIcon(Category category) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: getColorFromString(category.color),
+        shape: BoxShape.circle,
+      ),
+      child:
+          category.icon != null
+              ? Center(
+                child: Image.asset(
+                  category.icon!,
+                  width: 24,
+                  height: 24,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const SizedBox(width: 24, height: 24);
+                  },
+                ),
+              )
+              : null,
+    );
+  }
+
+  // Build the action buttons for each category
+  Widget _buildCategoryActions(Category category) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.edit),
+          onPressed: () => _handleEditCategory(category),
+        ),
+        IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: () => deleteCategory(category.id),
+        ),
+      ],
+    );
+  }
+
+  // Build a category list item
+  Widget _buildCategoryItem(Category category) {
+    return Card(
+      elevation: 2.0,
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
+      child: ListTile(
+        leading: _buildCategoryIcon(category),
+        title: Text(category.name),
+        trailing: _buildCategoryActions(category),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(8.0),
-      itemCount: _categories.length,
-      itemBuilder: (context, index) {
-        final category = _categories[index];
-        return Card(
-          elevation: 2.0,
-          margin: const EdgeInsets.symmetric(vertical: 4.0),
-          child: ListTile(            leading: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: category['color'],
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                if (category.containsKey('icon') && category['icon'] != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: Image.asset(
-                      category['icon'] as String,
-                      width: 24,
-                      height: 24,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const SizedBox(width: 24, height: 24);
-                      },
-                    ),
-                  ),
-              ],
-            ),
-            title: Text(category['name']),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    // Edit category functionality
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    // Delete category functionality
-                    setState(() {
-                      _categories.removeAt(index);
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
+    return StreamBuilder<List<Category>>(
+      stream: _categoryRepo.getCategories(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No categories found'));
+        }
+
+        // Filter categories by type if a type filter is set
+        List<Category> categories = snapshot.data!;
+        if (_selectedType != null) {
+          categories =
+              categories.where((cat) => cat.type == _selectedType).toList();
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(8.0),
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            return _buildCategoryItem(categories[index]);
+          },
         );
       },
     );
   }
+
+  // Helper method to convert color string to Color object
 }

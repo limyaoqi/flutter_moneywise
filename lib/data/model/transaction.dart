@@ -24,6 +24,19 @@ class Transaction {
     return 'Transaction{id: $id, title: $title, amount: $amount, date: $date, categoryId: $categoryId, paymentMethod: $paymentMethod, note: $note, transactionType: $transactionType}';
   }
 
+  // Convert the Transaction object to a map for database storage
+  // exp: 
+  // {
+  //   'id': '123',
+  //   'title': 'Groceries',
+  //   'amount': 50.0,
+  //   'date': '2023-10-01T12:00:00Z',
+  //   'categoryId': '456',
+  //   'paymentMethod': 'cash',
+  //   'note': 'Weekly shopping',
+  //   'transactionType': 'expense'
+  // }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -37,6 +50,29 @@ class Transaction {
     };
   }
 
+  // Convert a map from the database to a Transaction object
+  // exp form:
+  // {
+  //   'id': '123',
+  //   'title': 'Groceries',
+  //   'amount': 50.0,
+  //   'date': '2023-10-01T12:00:00Z',
+  //   'categoryId': '456',
+  //   'paymentMethod': 'cash',
+  //   'note': 'Weekly shopping',
+  //   'transactionType': 'expense'
+  // }
+  // to Transaction object
+  // Transaction{
+  //   id: '123',
+  //   title: 'Groceries',
+  //   amount: 50.0,
+  //   date: DateTime.parse('2023-10-01T12:00:00Z'),
+  //   categoryId: '456',
+  //   paymentMethod: TransactionPaymentMethod.cash,
+  //   note: 'Weekly shopping',
+  //   transactionType: TransactionType.expense
+  // }
   static Transaction fromMap(Map<String, dynamic> map) {
     return Transaction(
       id: map['id'],

@@ -76,17 +76,18 @@ class UserProfileMenu extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-
-              // Logout button
+              const SizedBox(height: 24), // Logout button
               ListTile(
                 leading: const Icon(Icons.logout, color: AppColors.expense),
                 title: const Text('Sign Out'),
                 onTap: () async {
+                  // First close the modal bottom sheet
+                  Navigator.pop(context);
+
+                  // Then sign out (this will trigger the GoRouter redirect)
                   await FirebaseAuth.instance.signOut();
                   await GoogleSignIn().signOut();
-                  Navigator.pop(context); // Close bottom sheet
-                  Navigator.pushReplacementNamed(context, '/login');
+                  // No need to navigate manually, GoRouter will handle it
                 },
               ),
             ],

@@ -1,18 +1,18 @@
 import 'package:moneywise/data/model/transaction.dart';
 
 class TransactionFilter {
-  final String? dateMethod;
+  final TransactionFilterDateMethod? dateMethod;
   final String? dateRequired;
   final String? categoryId;
   final TransactionType? transactionType;
   final TransactionFilterPaymentMethod? paymentMethod;
 
   TransactionFilter({
-    this.dateMethod,
+    this.dateMethod = TransactionFilterDateMethod.all,
     this.dateRequired,
     this.categoryId,
-    required this.transactionType,
-    required this.paymentMethod,
+    this.transactionType = TransactionType.income,
+    this.paymentMethod = TransactionFilterPaymentMethod.all,
   });
 }
 
@@ -34,9 +34,6 @@ abstract class TransactionRepo {
   });
 }
 
-enum TransactionFilterPaymentMethod {
-  all,
-  tng,
-  cash,
-  bank,
-}
+enum TransactionFilterPaymentMethod { all, tng, cash, bank }
+
+enum TransactionFilterDateMethod { all, daily, weekly, monthly }

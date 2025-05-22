@@ -33,15 +33,16 @@ class TransactionRepoFirestore implements TransactionRepo {
     if (filter != null) {
       // transactionType filter is required
       if (filter.transactionType != null) {
-        query = query.where('transactionType', isEqualTo: filter.transactionType);
+        query = query.where(
+          'transactionType',
+          isEqualTo: filter.transactionType,
+        );
       }
 
       // paymentMethod filter is required
-      if (filter.paymentMethod != null) {
+      if (filter.paymentMethod != null &&
+          filter.paymentMethod != TransactionFilterPaymentMethod.all) {
         switch (filter.paymentMethod) {
-          case TransactionFilterPaymentMethod.all:
-            // No payment method filtering needed
-            break;
           case TransactionFilterPaymentMethod.tng:
             query = query.where('paymentMethod', isEqualTo: 'tng');
             break;
@@ -54,13 +55,14 @@ class TransactionRepoFirestore implements TransactionRepo {
           default:
             break;
         }
-      } // Handle date filtering based on dateMethod and dateRequired
-      if (filter.dateMethod != null && filter.dateRequired != null) {
+      }
+
+      // Handle date filtering based on dateMethod and dateRequired
+      if (filter.dateMethod != null &&
+          filter.dateMethod != TransactionFilterDateMethod.all &&
+          filter.dateRequired != null) {
         switch (filter.dateMethod) {
-          case 'all':
-            // No date filtering needed
-            break;
-          case 'yearly':
+          case TransactionFilterDateMethod.weekly:
             // Filter by year
             final year = filter.dateRequired ?? '';
             if (year.isNotEmpty) {
@@ -75,7 +77,7 @@ class TransactionRepoFirestore implements TransactionRepo {
                   .where('date', isLessThan: endOfYear.toIso8601String());
             }
             break;
-          case 'monthly':
+          case TransactionFilterDateMethod.monthly:
             // Filter by month (format: "YYYY-MM")
             final dateRequired = filter.dateRequired ?? '';
             if (dateRequired.isNotEmpty) {
@@ -96,7 +98,7 @@ class TransactionRepoFirestore implements TransactionRepo {
               }
             }
             break;
-          case 'daily':
+          case TransactionFilterDateMethod.daily:
             // Filter by specific date (format: "YYYY-MM-DD")
             final dateRequired = filter.dateRequired ?? '';
             if (dateRequired.isNotEmpty) {
@@ -107,6 +109,9 @@ class TransactionRepoFirestore implements TransactionRepo {
                   .where('date', isGreaterThanOrEqualTo: date.toIso8601String())
                   .where('date', isLessThan: nextDay.toIso8601String());
             }
+            break;
+          default:
+            // Do nothing if null or not matched
             break;
         }
       }

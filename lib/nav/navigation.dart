@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:moneywise/data/repo/auth-repo.dart';
+import 'package:moneywise/data/repo/auth_repo.dart';
 import 'package:moneywise/ui/auth/auth_screen.dart';
 import 'package:moneywise/ui/home/home_screen.dart';
 

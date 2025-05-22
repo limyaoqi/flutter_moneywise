@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moneywise/data/repo/auth-repo.dart';
+import 'package:moneywise/data/repo/auth_repo.dart';
+import 'package:moneywise/data/util/default_categories.dart';
 import 'package:moneywise/theme/app_colors.dart';
 
 class AuthScreen extends StatelessWidget {
@@ -48,6 +49,12 @@ class AuthScreen extends StatelessWidget {
                 onPressed: () async {
                   final user = await repo.signInWithGoogle();
                   if (user != null && context.mounted) {
+                    // Initialize default categories if the user is new
+                    try {
+                      await DefaultCategoriesUtil.initializeDefaultCategories();
+                    } catch (e) {
+                      print('Error initializing default categories: $e');
+                    }
                     Navigator.pushReplacementNamed(context, '/');
                   }
                 },
