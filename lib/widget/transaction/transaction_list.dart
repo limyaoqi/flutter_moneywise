@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:moneywise/data/model/category.dart';
 import 'package:moneywise/data/model/transaction.dart';
 import 'package:moneywise/data/repo/category_repo.dart';
 import 'package:moneywise/data/repo/category_repo_firestore.dart';
+import 'package:moneywise/nav/navigation.dart';
 import 'package:moneywise/utils/color_utils.dart';
 import 'package:moneywise/utils/format_payment_method.dart';
 import 'package:moneywise/widget/transaction/transaction_emptystate.dart';
@@ -92,6 +94,17 @@ class _transactionItem extends StatelessWidget {
               ),
             ),
             // onTap: () => _showTransactionDetails(transaction, category),
+            onTap:
+                () => context.pushNamed(
+                  Screens.manage.name,
+                  queryParameters: {
+                    'isIncome':
+                        transaction.transactionType == TransactionType.income
+                            ? 'true'
+                            : 'false',
+                    'transactionId': transaction.id,
+                  },
+                ),
           ),
         );
       },

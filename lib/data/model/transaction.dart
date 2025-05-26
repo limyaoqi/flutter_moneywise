@@ -1,5 +1,5 @@
 class Transaction {
-  final String id;
+  final String? id;
   final String title;
   final double amount;
   final DateTime date;
@@ -9,7 +9,7 @@ class Transaction {
   final TransactionType transactionType;
 
   Transaction({
-    required this.id,
+    this.id,
     required this.title,
     required this.amount,
     required this.date,
@@ -19,13 +19,35 @@ class Transaction {
     required this.transactionType,
   });
 
+  Transaction copy({
+    String? id,
+    String? title,
+    double? amount,
+    DateTime? date,
+    String? categoryId,
+    TransactionPaymentMethod? paymentMethod,
+    String? note,
+    TransactionType? transactionType,
+  }) {
+    return Transaction(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      categoryId: categoryId ?? this.categoryId,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      note: note ?? this.note,
+      transactionType: transactionType ?? this.transactionType,
+    );
+  }
+
   @override
   String toString() {
     return 'Transaction{id: $id, title: $title, amount: $amount, date: $date, categoryId: $categoryId, paymentMethod: $paymentMethod, note: $note, transactionType: $transactionType}';
   }
 
   // Convert the Transaction object to a map for database storage
-  // exp: 
+  // exp:
   // {
   //   'id': '123',
   //   'title': 'Groceries',
@@ -44,9 +66,9 @@ class Transaction {
       'amount': amount,
       'date': date.toIso8601String(),
       'categoryId': categoryId,
-      'paymentMethod': paymentMethod,
+      'paymentMethod': paymentMethod.name,
       'note': note,
-      'transactionType': transactionType,
+      'transactionType': transactionType.name,
     };
   }
 
@@ -80,20 +102,17 @@ class Transaction {
       amount: map['amount'],
       date: DateTime.parse(map['date']),
       categoryId: map['categoryId'],
-      paymentMethod: map['paymentMethod'],
       note: map['note'],
-      transactionType: map['transactionType'],
+      paymentMethod: TransactionPaymentMethod.values.firstWhere(
+        (e) => e.name == map['paymentMethod'],
+      ),
+      transactionType: TransactionType.values.firstWhere(
+        (e) => e.name == map['transactionType'],
+      ),
     );
   }
 }
 
-enum TransactionType {
-  income,
-  expense,
-}
+enum TransactionType { income, expense }
 
-enum TransactionPaymentMethod{
-  tng,
-  cash,
-  bank,
-}
+enum TransactionPaymentMethod { tng, cash, bank }

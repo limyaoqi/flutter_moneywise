@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:moneywise/data/repo/auth_repo.dart';
 import 'package:moneywise/ui/auth/auth_screen.dart';
 import 'package:moneywise/ui/home/home_screen.dart';
+import 'package:moneywise/ui/home/manage_transaction/manage_screen.dart';
 
 class Navigation {
   static const initial = '/';
@@ -32,6 +33,15 @@ class Navigation {
         name: Screens.home.name,
         builder: (context, state) => HomeScreen(user: authNotifier.user),
       ),
+      GoRoute(
+        path: '/manage_transaction',
+        name: Screens.manage.name,
+        builder: (context, state) {
+          final isIncome = state.uri.queryParameters['isIncome'] == 'true';
+          final transactionId = state.uri.queryParameters['transactionId'];
+          return ManageScreen(isIncome: isIncome, transactionId: transactionId);
+        },
+      ),
     ],
   );
 }
@@ -54,4 +64,4 @@ class AuthNotifier extends ChangeNotifier {
   User? get user => _user;
 }
 
-enum Screens { home, login }
+enum Screens { home, login, manage }

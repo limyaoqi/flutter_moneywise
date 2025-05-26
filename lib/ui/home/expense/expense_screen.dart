@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:moneywise/data/model/transaction.dart';
+import 'package:moneywise/nav/navigation.dart';
+import 'package:moneywise/theme/app_colors.dart';
+import 'package:moneywise/ui/home/transaction/transaction_base_screen.dart';
 import 'package:moneywise/widget/transaction/transaction_list.dart';
 
 class ExpenseScreen extends StatefulWidget {
@@ -9,7 +13,7 @@ class ExpenseScreen extends StatefulWidget {
   State<ExpenseScreen> createState() => _ExpenseScreenState();
 }
 
-class _ExpenseScreenState extends State<ExpenseScreen> 
+class _ExpenseScreenState extends State<ExpenseScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -39,7 +43,7 @@ class _ExpenseScreenState extends State<ExpenseScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -50,26 +54,10 @@ class _ExpenseScreenState extends State<ExpenseScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Income'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Income List', icon: Icon(Icons.list)),
-            Tab(text: 'Add Income', icon: Icon(Icons.add)),
-            Tab(text: 'Income Chart', icon: Icon(Icons.pie_chart)),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          TransactionList(isIncome: false, transactionList: _dummyTransactions),
-          Center(child: Text('Add Income')),
-          Center(child: Text('Income Chart')),
-        ],
-      ),
+    return TransactionBaseScreen(
+      isIncome: false,
+      transactions: _dummyTransactions,
+      title: 'Expense',
     );
   }
 }
