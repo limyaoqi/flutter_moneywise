@@ -61,7 +61,7 @@ class Transaction {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
+      // 'id' field removed from map as we'll use Firestore document ID
       'title': title,
       'amount': amount,
       'date': date.toIso8601String(),

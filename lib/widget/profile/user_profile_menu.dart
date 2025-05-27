@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:moneywise/theme/app_colors.dart';
+import 'package:moneywise/widget/dialogs/confirm_delete_dialog.dart';
 
 class UserProfileMenu extends StatelessWidget {
   final User? user;
@@ -80,14 +81,24 @@ class UserProfileMenu extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.logout, color: AppColors.expense),
                 title: const Text('Sign Out'),
-                onTap: () async {
+                onTap: () {
                   // First close the modal bottom sheet
                   Navigator.pop(context);
-
-                  // Then sign out (this will trigger the GoRouter redirect)
-                  await FirebaseAuth.instance.signOut();
-                  await GoogleSignIn().signOut();
-                  // No need to navigate manually, GoRouter will handle it
+                  // Show confirmation dialog
+                  ConfirmDeleteDialog.show(
+                    context: context,
+                    title: 'Confirm Sign Out',
+                    content: 'Are you sure you want to sign out?',
+                    cancelText: 'Cancel',
+                    confirmText: 'Sign Out',
+                    confirmColor: AppColors.expense,
+                    onConfirm: () async {
+                      // Then sign out (this will trigger the GoRouter redirect)
+                      await FirebaseAuth.instance.signOut();
+                      await GoogleSignIn().signOut();
+                      // No need to navigate manually, GoRouter will handle it
+                    },
+                  );
                 },
               ),
             ],

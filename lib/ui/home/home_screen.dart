@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:moneywise/data/model/transaction.dart';
+import 'package:moneywise/data/model/transaction_filter.dart';
 import 'package:moneywise/data/repo/transaction_repo.dart';
 import 'package:moneywise/data/repo/transaction_repo_firestore.dart';
 import 'package:moneywise/theme/app_colors.dart';
@@ -30,64 +31,6 @@ class _HomeScreenState extends State<HomeScreen>
       TransactionFilterPaymentMethod.all;
   TimeFilterType _currentTimeFilterType = TimeFilterType.all;
   DateTime? _currentDateTime;
-  // Store filtered transactions for UI update (to be used later)
-  // ignore: unused_field
-  List<Transaction> _filteredTransactions = [];
-
-  void onFilterChanged(TransactionFilter filter) {
-    _transactionRepo.getTransactions(filter: filter).listen((transactions) {
-      setState(() {
-        _filteredTransactions = transactions;
-        // Here you would update your UI with the filtered transactions
-      });
-    });
-  }
-
-  // Method to build and apply the filter from current selections
-  void _applyFilters() {
-    final TransactionType transactionType =
-        _selectedIndex == 0 ? TransactionType.income : TransactionType.expense;
-
-    String? dateRequired;
-    TransactionFilterDateMethod? dateMethod;
-
-    // Convert TimeFilterType to TransactionFilterDateMethod and format date
-    switch (_currentTimeFilterType) {
-      case TimeFilterType.daily:
-        dateMethod = TransactionFilterDateMethod.daily;
-        if (_currentDateTime != null) {
-          dateRequired = _currentDateTime!.toIso8601String().split('T')[0];
-        }
-        break;
-      case TimeFilterType.monthly:
-        dateMethod = TransactionFilterDateMethod.monthly;
-        if (_currentDateTime != null) {
-          dateRequired =
-              "${_currentDateTime!.year}-${_currentDateTime!.month.toString().padLeft(2, '0')}";
-        }
-        break;
-      case TimeFilterType.yearly:
-        dateMethod =
-            TransactionFilterDateMethod
-                .monthly; // Using monthly for year filtering
-        if (_currentDateTime != null) {
-          dateRequired = "${_currentDateTime!.year}";
-        }
-        break;
-      case TimeFilterType.all:
-        dateMethod = TransactionFilterDateMethod.all;
-        dateRequired = null;
-    } 
-    // Create and apply the filter
-    final filter = TransactionFilter(
-      transactionType: transactionType,
-      paymentMethod: _currentPaymentMethod,
-      dateMethod: dateMethod,
-      dateRequired: dateRequired,
-    );
-
-    onFilterChanged(filter);
-  }
 
   @override
   void initState() {
@@ -97,28 +40,84 @@ class _HomeScreenState extends State<HomeScreen>
       setState(() {
         _selectedIndex = _tabController.index;
       });
-
-      // Apply filters when switching between Income/Expense tabs
-      // Only apply if we're on Income or Expense tabs (0 or 1)
-      if (_selectedIndex < 2) {
-        _applyFilters();
-      }
     });
-
-    // Initialize with default filters
-    Future.microtask(() => _applyFilters());
   }
 
-  // Dispose the TabController when the widget is removed from the widget tree
-  // to prevent memory leaks.
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
   }
 
+  TransactionFilter _buildCurrentFilter() {
+    TransactionType? transactionType;
+    if (_selectedIndex == 0) {
+      transactionType = TransactionType.income;
+    } else if (_selectedIndex == 1) {
+      transactionType = TransactionType.expense;
+    } else {
+      // For categories tab, we don't need a transaction type
+      return TransactionFilter();
+    }
+
+    // Create the appropriate filter based on current selections
+    TransactionFilter filter = TransactionFilter(
+      transactionType: transactionType,
+      paymentMethod: _currentPaymentMethod,
+      dateMethod: TransactionFilterDateMethod.all,
+    );
+
+    // Add date filtering if applicable
+    if (_currentTimeFilterType != TimeFilterType.all &&
+        _currentDateTime != null) {
+      switch (_currentTimeFilterType) {
+        case TimeFilterType.daily:
+          filter = TransactionFilter(
+            transactionType: transactionType,
+            paymentMethod: _currentPaymentMethod,
+            dateMethod: TransactionFilterDateMethod.daily,
+            dateRequired: _currentDateTime!.toIso8601String().substring(
+              0,
+              10,
+            ), // YYYY-MM-DD
+          );
+          break;
+        case TimeFilterType.monthly:
+          filter = TransactionFilter(
+            transactionType: transactionType,
+            paymentMethod: _currentPaymentMethod,
+            dateMethod: TransactionFilterDateMethod.monthly,
+            dateRequired:
+                '${_currentDateTime!.year}-${_currentDateTime!.month.toString().padLeft(2, '0')}', // YYYY-MM
+          );
+          break;
+        case TimeFilterType.yearly:
+          filter = TransactionFilter(
+            transactionType: transactionType,
+            paymentMethod: _currentPaymentMethod,
+            dateMethod:
+                TransactionFilterDateMethod
+                    .weekly, // Using weekly for yearly as per implementation
+            dateRequired: _currentDateTime!.year.toString(),
+          );
+          break;
+        case TimeFilterType.all:
+          // Already handled with default filter
+          break;
+      }
+    }
+
+    debugPrint(
+      'Filter: $filter | transactionType: ${transactionType.toString()}',
+    );
+
+    return filter;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filter = _buildCurrentFilter();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -130,7 +129,6 @@ class _HomeScreenState extends State<HomeScreen>
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
         actions: [
-          // User profile icon/avatar using the separate widget
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: UserAvatar(user: widget.user),
@@ -157,10 +155,10 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 // Payment Type Filter
                 PaymentFilterBar(
-                  onFilterChanged: (filter) {
+                  onFilterChanged: (filterValue) {
                     setState(() {
                       // Convert string filter to enum
-                      switch (filter) {
+                      switch (filterValue) {
                         case 'TNG':
                           _currentPaymentMethod =
                               TransactionFilterPaymentMethod.tng;
@@ -179,7 +177,6 @@ class _HomeScreenState extends State<HomeScreen>
                               TransactionFilterPaymentMethod.all;
                       }
                     });
-                    _applyFilters();
                   },
                 ),
 
@@ -196,21 +193,69 @@ class _HomeScreenState extends State<HomeScreen>
                       _currentTimeFilterType = filterType;
                       _currentDateTime = dateTime;
                     });
-                    _applyFilters();
                   },
                 ),
               ],
             ),
-          ), // Main Content
+          ),
+
+          // Main Content
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: const [
-                IncomeScreen(),
-                ExpenseScreen(),
-                CategoriesScreen(),
-              ],
-            ),
+            child:
+                _selectedIndex == 2
+                    ? const CategoriesScreen()
+                    : StreamBuilder<List<Transaction>>(
+                      stream: _transactionRepo.getTransactions(filter: filter),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          debugPrint(
+                            'Error loading transactions: ${snapshot.error}',
+                          );
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  size: 48,
+                                  color: Colors.red,
+                                ),
+                                const SizedBox(height: 16),
+                                Text('Error: ${snapshot.error}'),
+                              ],
+                            ),
+                          );
+                        }
+
+                        final transactions = snapshot.data ?? [];
+                        debugPrint(
+                          'Received ${transactions.length} transactions',
+                        );
+
+                        return TabBarView(
+                          controller: _tabController,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            IncomeScreen(
+                              transactions:
+                                  _selectedIndex == 0 ? transactions : [],
+                            ),
+                            ExpenseScreen(
+                              transactions:
+                                  _selectedIndex == 1 ? transactions : [],
+                            ),
+                            const CategoriesScreen(), // This won't actually be shown
+                          ],
+                        );
+                      },
+                    ),
           ),
         ],
       ),

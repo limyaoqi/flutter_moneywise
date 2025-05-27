@@ -81,6 +81,9 @@ class _ManageScreenState extends State<ManageScreen> {
       _transaction = await transactionRepo.getTransactionById(
         widget.transactionId!,
       );
+      debugPrint(
+        'Loaded transaction: ${_transaction?.toMap()}',
+      );
       if (_transaction != null) {
         _titleController.text = _transaction!.title;
         _amountController.text = _transaction!.amount.toString();
@@ -122,7 +125,7 @@ class _ManageScreenState extends State<ManageScreen> {
       title: _titleController.text,
       amount: double.parse(_amountController.text),
       date: _selectedDate!,
-      categoryId: _selectedCategory!.id,
+      categoryId: _selectedCategory!.id ?? '',
       paymentMethod: _selectedPaymentMethod,
       note: _noteController.text.isEmpty ? null : _noteController.text,
       transactionType:
@@ -307,7 +310,7 @@ class _ManageScreenState extends State<ManageScreen> {
                                             width: 2,
                                           ),
                                           borderRadius: BorderRadius.circular(8),
-                                          color: isSelected ? categoryColor.withOpacity(0.1) : null,
+                                          color: isSelected ? categoryColor.withAlpha(10) : null,
                                         ),
                                         child: Column(
                                           mainAxisAlignment: MainAxisAlignment.center,

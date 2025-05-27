@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:moneywise/data/model/transaction.dart';
+import 'package:moneywise/data/model/transaction_filter.dart';
 import 'package:moneywise/data/repo/transaction_repo.dart';
 
 class TransactionRepoFirestore implements TransactionRepo {
@@ -27,15 +28,14 @@ class TransactionRepoFirestore implements TransactionRepo {
 
   @override
   Stream<List<Transaction>> getTransactions({TransactionFilter? filter}) {
-    Query<Map<String, dynamic>> query = _transactionsCollection;
-
-    // Apply required filters for transactionType and paymentMethod
+    Query<Map<String, dynamic>> query =
+        _transactionsCollection; // Apply required filters for transactionType and paymentMethod
     if (filter != null) {
       // transactionType filter is required
       if (filter.transactionType != null) {
         query = query.where(
           'transactionType',
-          isEqualTo: filter.transactionType,
+          isEqualTo: filter.transactionType?.name,
         );
       }
 
@@ -125,17 +125,26 @@ class TransactionRepoFirestore implements TransactionRepo {
     }
 
     // Order by date (newest first)
-    query = query.orderBy('date', descending: true);
-
-    // Return as stream
-    return query.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        // Ensure ID is included
-        data['id'] = doc.id;
-        return Transaction.fromMap(data);
-      }).toList();
-    });
+    query = query.orderBy(
+      'date',
+      descending: true,
+    ); // Return as stream with error handling
+    try {
+      return query.snapshots().map((snapshot) {
+        return snapshot.docs.map((doc) {
+          try {
+            final data = doc.data();
+            return Transaction.fromMap(data).copy(id: doc.id);
+          } catch (e) {
+            print('Error parsing transaction document ${doc.id}: $e');
+            rethrow;
+          }
+        }).toList();
+      });
+    } catch (e) {
+      print('Error in getTransactions: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -150,17 +159,27 @@ class TransactionRepoFirestore implements TransactionRepo {
     }
 
     final data = docSnapshot.data()!;
-    data['id'] = docSnapshot.id;
-    return Transaction.fromMap(data);
+    return Transaction.fromMap(data).copy(id: docSnapshot.id);
   }
 
   @override
   Future<void> addTransaction(Transaction transaction) async {
-    await _transactionsCollection.doc(transaction.id).set(transaction.toMap());
+    if (transaction.id == null || transaction.id!.isEmpty) {
+      // No ID provided, let Firestore generate one
+      await _transactionsCollection.add(transaction.toMap());
+    } else {
+      // ID provided, use it
+      await _transactionsCollection
+          .doc(transaction.id)
+          .set(transaction.toMap());
+    }
   }
 
   @override
   Future<void> updateTransaction(Transaction transaction) async {
+    if (transaction.id == null || transaction.id!.isEmpty) {
+      throw Exception('Cannot update transaction without an ID');
+    }
     await _transactionsCollection
         .doc(transaction.id)
         .update(transaction.toMap());

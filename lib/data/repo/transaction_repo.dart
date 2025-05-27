@@ -1,20 +1,7 @@
 import 'package:moneywise/data/model/transaction.dart';
+import 'package:moneywise/data/model/transaction_filter.dart';
 
-class TransactionFilter {
-  final TransactionFilterDateMethod? dateMethod;
-  final String? dateRequired;
-  final String? categoryId;
-  final TransactionType? transactionType;
-  final TransactionFilterPaymentMethod? paymentMethod;
 
-  TransactionFilter({
-    this.dateMethod = TransactionFilterDateMethod.all,
-    this.dateRequired,
-    this.categoryId,
-    this.transactionType = TransactionType.income,
-    this.paymentMethod = TransactionFilterPaymentMethod.all,
-  });
-}
 
 abstract class TransactionRepo {
   Stream<List<Transaction>> getTransactions({TransactionFilter? filter});

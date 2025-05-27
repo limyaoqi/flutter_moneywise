@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moneywise/data/model/category.dart';
 import 'package:moneywise/data/repo/category_repo_firestore.dart';
 import 'package:moneywise/utils/color_utils.dart';
+import 'package:moneywise/widget/dialogs/confirm_delete_dialog.dart';
 
 class CategoriesList extends StatefulWidget {
   const CategoriesList({super.key});
@@ -32,9 +33,37 @@ class _CategoriesListState extends State<CategoriesList> {
     await _categoryRepo.addCategory(category);
   }
 
-  // Method to delete category
+  // Method to delete category with check for existing transactions
   Future<void> deleteCategory(String id) async {
+    // Check if the category is used in any transactions
+    final bool isInUse = await _categoryRepo.isCategoryUsedInTransactions(id);
+
+    if (isInUse) {
+      // Show an error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Cannot delete category that is used in transactions',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // No transactions use this category, safe to delete
     await _categoryRepo.deleteCategory(id);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Category deleted successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   // Handler for when edit button is pressed
@@ -79,9 +108,24 @@ class _CategoriesListState extends State<CategoriesList> {
         ),
         IconButton(
           icon: const Icon(Icons.delete),
-          onPressed: () => deleteCategory(category.id),
+          onPressed: () => _showDeleteConfirmation(category),
         ),
       ],
+    );
+  }
+
+  // Show confirmation dialog before deleting a category
+  void _showDeleteConfirmation(Category category) {
+    ConfirmDeleteDialog.show(
+      context: context,
+      title: 'Delete Category',
+      content:
+          'Are you sure you want to delete the category "${category.name}"?',
+      onConfirm: () {
+        if (category.id != null) {
+          deleteCategory(category.id!);
+        }
+      },
     );
   }
 

@@ -44,18 +44,18 @@ Color getColorFromString(String colorString) {
 
   try {
     if (colorString.contains('MaterialColor')) {
-      final valueString = RegExp(r'value: (\d+)')
-          .firstMatch(colorString)
-          ?.group(1);
+      final valueString = RegExp(
+        r'value: (\d+)',
+      ).firstMatch(colorString)?.group(1);
       if (valueString != null) {
         return Color(int.parse(valueString));
       }
     }
 
     if (colorString.contains('Color(')) {
-      final valueString = RegExp(r'Color\((\d+)\)')
-          .firstMatch(colorString)
-          ?.group(1);
+      final valueString = RegExp(
+        r'Color\((\d+)\)',
+      ).firstMatch(colorString)?.group(1);
       if (valueString != null) {
         return Color(int.parse(valueString));
       }
@@ -65,4 +65,26 @@ Color getColorFromString(String colorString) {
   } catch (_) {
     return Colors.blue;
   }
+}
+
+String getStringFromColor(Color color) {
+  if (color == Colors.red) return 'red';
+  if (color == Colors.pink) return 'pink';
+  if (color == Colors.purple) return 'purple';
+  if (color == Colors.deepPurple) return 'deepPurple';
+  if (color == Colors.indigo) return 'indigo';
+  if (color == Colors.blue) return 'blue';
+  if (color == Colors.lightBlue) return 'lightBlue';
+  if (color == Colors.cyan) return 'cyan';
+  if (color == Colors.teal) return 'teal';
+  if (color == Colors.green) return 'green';
+  if (color == Colors.lightGreen) return 'lightGreen';
+  if (color == Colors.lime) return 'lime';
+  if (color == Colors.yellow) return 'yellow';
+  if (color == Colors.amber) return 'amber';
+  if (color == Colors.orange) return 'orange';
+  if (color == Colors.deepOrange) return 'deepOrange';
+  if (color == Colors.brown) return 'brown';
+  if (color == Colors.grey) return 'grey';
+  return 'blue'; // Default color
 }

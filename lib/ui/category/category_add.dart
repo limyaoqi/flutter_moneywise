@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:moneywise/data/model/category.dart';
 import 'package:moneywise/data/repo/category_repo_firestore.dart';
-import 'package:uuid/uuid.dart';
+import 'package:moneywise/utils/category_constants.dart';
+import 'package:moneywise/utils/color_utils.dart';
 
 class CategoryAdd extends StatefulWidget {
   const CategoryAdd({super.key});
@@ -11,71 +12,12 @@ class CategoryAdd extends StatefulWidget {
 }
 
 class _CategoryAddState extends State<CategoryAdd> {
-  final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>(); 
   Color _selectedColor = Colors.blue;
-  String? _selectedIcon; // To store the selected icon path
-  String _selectedType = 'expense'; // Default category type
+  String? _selectedIcon; 
+  String _selectedType = 'expense'; 
   final CategoryRepoFirestore _categoryRepo = CategoryRepoFirestore();
-  final _uuid = Uuid();
-
-  // Map of icons with their file paths
-  final Map<String, String> _availableIcons = {
-    'Food': 'assets/icons/categories/food.png',
-    'Transportation': 'assets/icons/categories/transportation.png',
-    'Entertainment': 'assets/icons/categories/entertainment.png',
-    'Shopping': 'assets/icons/categories/shopping-cart.png',
-    'Bills': 'assets/icons/categories/bill.png',
-    'Healthcare': 'assets/icons/categories/healthcare.png',
-    'Education': 'assets/icons/categories/education.png',
-    'Salary': 'assets/icons/categories/salary.png',
-    'Business': 'assets/icons/categories/business.png',
-    'Investment': 'assets/icons/categories/investment.png',
-  };
-
-  final List<Color> _availableColors = [
-    Colors.red,
-    Colors.pink,
-    Colors.purple,
-    Colors.deepPurple,
-    Colors.indigo,
-    Colors.blue,
-    Colors.lightBlue,
-    Colors.cyan,
-    Colors.teal,
-    Colors.green,
-    Colors.lightGreen,
-    Colors.lime,
-    Colors.yellow,
-    Colors.amber,
-    Colors.orange,
-    Colors.deepOrange,
-    Colors.brown,
-    Colors.grey,
-  ];
-
-  // Map to convert Color object to string name
-  String _colorToString(Color color) {
-    if (color == Colors.red) return 'red';
-    if (color == Colors.pink) return 'pink';
-    if (color == Colors.purple) return 'purple';
-    if (color == Colors.deepPurple) return 'deepPurple';
-    if (color == Colors.indigo) return 'indigo';
-    if (color == Colors.blue) return 'blue';
-    if (color == Colors.lightBlue) return 'lightBlue';
-    if (color == Colors.cyan) return 'cyan';
-    if (color == Colors.teal) return 'teal';
-    if (color == Colors.green) return 'green';
-    if (color == Colors.lightGreen) return 'lightGreen';
-    if (color == Colors.lime) return 'lime';
-    if (color == Colors.yellow) return 'yellow';
-    if (color == Colors.amber) return 'amber';
-    if (color == Colors.orange) return 'orange';
-    if (color == Colors.deepOrange) return 'deepOrange';
-    if (color == Colors.brown) return 'brown';
-    if (color == Colors.grey) return 'grey';
-    return 'blue'; // Default color
-  }
 
   void _selectIcon(String iconPath) {
     setState(() {
@@ -107,9 +49,8 @@ class _CategoryAddState extends State<CategoryAdd> {
 
       // Create a category object with all the selected values
       final newCategory = Category(
-        id: _uuid.v4(),
         name: _nameController.text,
-        color: _colorToString(_selectedColor),
+        color: getStringFromColor(_selectedColor),
         icon: _selectedIcon!,
         type: _selectedType,
       );
@@ -175,10 +116,13 @@ class _CategoryAddState extends State<CategoryAdd> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
-            itemCount: _availableIcons.length,
+            itemCount: CategoryConstants.availableIcons.length,
             itemBuilder: (context, index) {
-              final iconName = _availableIcons.keys.elementAt(index);
-              final iconPath = _availableIcons.values.elementAt(index);
+              final iconName = CategoryConstants.availableIcons.keys.elementAt(
+                index,
+              );
+              final iconPath = CategoryConstants.availableIcons.values
+                  .elementAt(index);
               final isSelected = iconPath == _selectedIcon;
 
               return GestureDetector(
@@ -260,7 +204,7 @@ class _CategoryAddState extends State<CategoryAdd> {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children:
-                _availableColors.map((color) {
+                CategoryConstants.availableColors.map((color) {
                   return GestureDetector(
                     onTap: () => _selectColor(color),
                     child: Container(
