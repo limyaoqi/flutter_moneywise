@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moneywise/data/model/transaction.dart';
-import 'package:moneywise/ui/home/transaction/transaction_base_screen.dart';
+import 'package:moneywise/widget/transaction/transaction_base_screen.dart';
 
 class ExpenseScreen extends StatelessWidget {
   final List<Transaction> transactions;

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:moneywise/data/model/transaction.dart';
 import 'package:moneywise/nav/navigation.dart';
 import 'package:moneywise/theme/app_colors.dart';
+import 'package:moneywise/widget/transaction/transaction_chart.dart';
 import 'package:moneywise/widget/transaction/transaction_list.dart';
 
 class TransactionBaseScreen extends StatefulWidget {
@@ -91,7 +92,10 @@ class _TransactionBaseScreenState extends State<TransactionBaseScreen>
             isIncome: widget.isIncome,
             transactionList: widget.transactions,
           ),
-          Center(child: Text('${widget.title} Chart')),
+          TransactionChart(
+            transactions: widget.transactions,
+            isIncome: widget.isIncome,
+          ),
         ],
       ),
     );

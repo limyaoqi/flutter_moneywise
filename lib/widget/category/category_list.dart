@@ -102,10 +102,10 @@ class _CategoriesListState extends State<CategoriesList> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          icon: const Icon(Icons.edit),
-          onPressed: () => _handleEditCategory(category),
-        ),
+        // IconButton(
+        //   icon: const Icon(Icons.edit),
+        //   onPressed: () => _handleEditCategory(category),
+        // ),
         IconButton(
           icon: const Icon(Icons.delete),
           onPressed: () => _showDeleteConfirmation(category),

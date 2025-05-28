@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'category_list.dart';
-import 'category_add.dart';
+import '../../widget/category/category_list.dart';
+import '../../widget/category/category_add.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -12,7 +12,7 @@ class CategoriesScreen extends StatefulWidget {
 class _CategoriesScreenState extends State<CategoriesScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
+  
   @override
   void initState() {
     super.initState();

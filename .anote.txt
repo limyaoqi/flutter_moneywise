@@ -1,4 +1,448 @@
 
+import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+class PieChartWidget extends StatefulWidget {
+  // Data map with category names as keys and amounts as values
+  final Map<String, double> data;
+
+  // Optional custom colors for chart sections
+  final List<Color>? colors;
+
+  // Title to display above the chart
+  final String title;
+
+  const PieChartWidget({
+    super.key,
+    required this.data,
+    this.colors,
+    required this.title,
+  });
+
+  @override
+  State<PieChartWidget> createState() => _PieChartWidgetState();
+}
+
+class _PieChartWidgetState extends State<PieChartWidget>
+    with SingleTickerProviderStateMixin {
+  // Track which section is currently selected/touched
+  int? _touchedIndex;
+
+  // Currency formatter for Malaysian Ringgit
+  final _currencyFormat = NumberFormat.currency(symbol: 'RM');
+
+  // Animation controller for enhancing selection
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Handle empty data case
+    if (widget.data.isEmpty) {
+      return Card(
+        margin: const EdgeInsets.all(16),
+        elevation: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.pie_chart_outline, size: 48, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                'No data available for chart',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Use LayoutBuilder to make widget responsive
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.all(8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Column(
+              children: [
+                // Chart title with improved styling
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    widget.title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // Main chart section with animation
+                Expanded(
+                  flex: 2,
+                  child: AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (context, child) {
+                      return PieChart(
+                        PieChartData(
+                          startDegreeOffset: 30,
+                          sectionsSpace: 3,
+                          centerSpaceRadius: 50,
+                          sections: _generatePieSections(),
+                          pieTouchData: PieTouchData(
+                            touchCallback: (
+                              FlTouchEvent event,
+                              pieTouchResponse,
+                            ) {
+                              setState(() {
+                                if (!event.isInterestedForInteractions ||
+                                    pieTouchResponse == null ||
+                                    pieTouchResponse.touchedSection == null) {
+                                  _touchedIndex = -1;
+                                  _animationController.reverse();
+                                  return;
+                                }
+                                _touchedIndex =
+                                    pieTouchResponse
+                                        .touchedSection!
+                                        .touchedSectionIndex;
+                                _animationController.forward(from: 0);
+                              });
+                            },
+                          ),
+                        ),
+                        swapAnimationDuration: const Duration(
+                          milliseconds: 300,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+                const Divider(height: 24),
+
+                // Legend with improved styling
+                Expanded(flex: 1, child: _buildLegend()),
+
+                // Total display
+                _buildTotal(),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // Generate sections for the pie chart from data
+  List<PieChartSectionData> _generatePieSections() {
+    // Sort data by amount (largest first) for consistent appearance
+    final sortedData = Map.fromEntries(
+      widget.data.entries.toList()..sort((a, b) => b.value.compareTo(a.value)),
+    );
+
+    // Calculate total amount for percentage calculations
+    final double total = widget.data.values.fold(
+      0,
+      (sum, amount) => sum + amount,
+    );
+
+    // Enhanced color palette
+    final List<Color> defaultColors = [
+      const Color(0xFF3366CC),
+      const Color(0xFFDC3912),
+      const Color(0xFFFF9900),
+      const Color(0xFF109618),
+      const Color(0xFF990099),
+      const Color(0xFF0099C6),
+      const Color(0xFFDD4477),
+      const Color(0xFF66AA00),
+      const Color(0xFFB82E2E),
+      const Color(0xFF316395),
+    ];
+
+    // Create a pie section for each data entry
+    return sortedData.entries.toList().asMap().entries.map((entry) {
+      final index = entry.key;
+      final amount = entry.value.value;
+
+      // Calculate percentage (avoid division by zero)
+      final double percentage = total > 0 ? (amount / total * 100) : 0;
+
+      // Get section color (from provided colors or default)
+      final color =
+          widget.colors != null && index < widget.colors!.length
+              ? widget.colors![index]
+              : defaultColors[index % defaultColors.length];
+
+      // Check if this section is currently selected
+      final isTouched = _touchedIndex == index;
+
+      // Animate selected sections to be larger
+      final radius =
+          isTouched ? 60.0 + (20.0 * _animationController.value) : 60.0;
+
+      // Create the section data
+      return PieChartSectionData(
+        // Display percentage on the section
+        title: '${percentage.toStringAsFixed(1)}%',
+        // Section value (determines size proportion)
+        value: amount,
+        // Label styling
+        titleStyle: TextStyle(
+          fontSize: isTouched ? 16 : 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          shadows: const [
+            Shadow(blurRadius: 2, color: Colors.black26, offset: Offset(1, 1)),
+          ],
+        ),
+        // Section color with gradient effect
+        color: color,
+        // Section radius (larger when selected)
+        radius: radius,
+        badgeWidget: isTouched ? _buildBadge(entry.value.key, color) : null,
+        badgePositionPercentageOffset: 1.05,
+      );
+    }).toList();
+  }
+
+  // Build badge for selected section
+  Widget? _buildBadge(String category, Color color) {
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: _animationController.value,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 3,
+              offset: const Offset(1, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          category,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Build the legend showing category names, amounts and percentages
+  Widget _buildLegend() {
+    // Sort data by amount (largest first)
+    final sortedEntries =
+        widget.data.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+    // Calculate total for percentage calculations
+    final double total = widget.data.values.fold(
+      0,
+      (sum, amount) => sum + amount,
+    );
+
+    // Enhanced color palette
+    final List<Color> defaultColors = [
+      const Color(0xFF3366CC),
+      const Color(0xFFDC3912),
+      const Color(0xFFFF9900),
+      const Color(0xFF109618),
+      const Color(0xFF990099),
+      const Color(0xFF0099C6),
+      const Color(0xFFDD4477),
+      const Color(0xFF66AA00),
+      const Color(0xFFB82E2E),
+      const Color(0xFF316395),
+    ];
+
+    // Create scrollable legend list
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Scrollbar(
+        radius: const Radius.circular(8),
+        thumbVisibility: true,
+        child: ListView.builder(
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          itemCount: sortedEntries.length,
+          itemBuilder: (context, index) {
+            final entry = sortedEntries[index];
+            final percentage = total > 0 ? (entry.value / total * 100) : 0;
+
+            // Get color for this legend item
+            final color =
+                widget.colors != null && index < widget.colors!.length
+                    ? widget.colors![index]
+                    : defaultColors[index % defaultColors.length];
+
+            // Create a more compact row for each category with better styling
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              decoration: BoxDecoration(
+                color:
+                    _touchedIndex == index
+                        ? color.withOpacity(0.15)
+                        : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+                  // Color indicator dot with better styling
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: color,
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withOpacity(0.5),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+
+                  // Category name
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight:
+                            _touchedIndex == index
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                  // Amount value
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      _currencyFormat.format(entry.value),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color:
+                            _touchedIndex == index
+                                ? color.withOpacity(0.8)
+                                : Colors.black87,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+
+                  // Percentage in pill shape
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    margin: const EdgeInsets.only(left: 8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${percentage.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: color.withOpacity(0.8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // Build total display at bottom
+  Widget _buildTotal() {
+    final double total = widget.data.values.fold(
+      0,
+      (sum, amount) => sum + amount,
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'TOTAL',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).primaryColor,
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            _currencyFormat.format(total),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Theme.of(context).primaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 
 Future<AuthResponse> _googleSignIn() async {
