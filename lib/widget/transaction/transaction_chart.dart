@@ -33,7 +33,9 @@ class _TransactionChartState extends State<TransactionChart> {
   Future<void> _loadCategories() async {
     try {
       final transactionType =
-          widget.isIncome ? TransactionType.income : TransactionType.expense;
+          widget.isIncome
+              ? TransactionType.income.name
+              : TransactionType.expense.name;
       final categories = await _categoryRepo.getCategoriesByType(
         transactionType,
       );

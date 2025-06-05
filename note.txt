@@ -1,0 +1,128 @@
+MONEYWISE PROJECT - PRESENTATION NOTES
+=====================================
+
+PROJECT OVERVIEW:
+MoneyWise is a personal finance management mobile application built with Flutter and Firebase.
+Users can track income and expenses, categorize transactions, view analytics, and manage their money.
+
+KEY FEATURES:
+1. User Authentication (Google Sign-in)
+2. Income & Expense Tracking
+3. Transaction Categories
+4. Data Filtering (Payment method, Date range)
+5. Analytics with Charts
+6. Real-time Data Sync with Firebase
+
+TECHNICAL STACK:
+- Frontend: Flutter (Dart)
+- Backend: Firebase (Firestore, Authentication)
+- State Management: Provider pattern
+- Navigation: GoRouter
+- Charts: fl_chart package
+
+====================
+TECHNICAL Q&A SESSION
+====================
+
+Q1: Explain the Repository pattern implementation in your TransactionRepoFirestore class.
+A: I implemented an abstract TransactionRepo interface with methods like getTransactions(), addTransaction(), updateTransaction(), and deleteTransaction(). The TransactionRepoFirestore class implements this interface and handles all Firestore operations. I used the Singleton pattern with a private constructor _init() and factory constructor to ensure only one instance exists. This separates data access logic from UI logic and makes the code more testable.
+
+Q2: How do you handle Firestore queries and what optimization techniques did you use?
+A: In my getTransactions() method, I build dynamic queries based on TransactionFilter parameters. I use compound queries with multiple where() clauses for filtering by transactionType, paymentMethod, and date ranges. I also use orderBy('date', descending: true) to show newest transactions first. For optimization, I limit queries to specific users using the path 'users/$userId/transactions' to prevent unnecessary data retrieval.
+
+Q3: Explain how you implemented the date filtering logic in your Firestore queries.
+A: I convert DateTime objects to ISO8601 strings using date.toIso8601String() for storage. For filtering, I use isGreaterThanOrEqualTo and isLessThan operators. For daily filtering, I create a date range from the selected date to the next day. For monthly filtering, I parse "YYYY-MM" format and create DateTime objects for start and end of month. The queries look like: query.where('date', isGreaterThanOrEqualTo: startDate).where('date', isLessThan: endDate).
+
+Q4: How do you manage state across different screens and handle authentication state changes?
+A: I created an AuthNotifier class that extends ChangeNotifier and listens to FirebaseAuth.instance.authStateChanges(). This notifier is used by GoRouter as refreshListenable, so when authentication state changes, the router automatically redirects users. In the redirect function, I check if user is null and current location to decide whether to redirect to login or home screen.
+
+Q5: Explain the data mapping between Firestore documents and your Dart models.
+A: I implemented toMap() and fromMap() methods in my Transaction and Category models. The toMap() method converts Dart objects to Map<String, dynamic> for Firestore storage, while fromMap() converts Firestore documents back to Dart objects. I handle enum conversion by using .name for storage and .values.firstWhere() for retrieval. The document ID is handled separately using the copy() method to add it to the model.
+
+Q6: How do you handle real-time data synchronization and why did you choose Streams over Futures?
+A: I use Firestore's snapshots() method which returns a Stream<QuerySnapshot>. I wrap this with StreamBuilder widgets in the UI. Streams are better than Futures because they automatically update when data changes in the database. When a user adds a transaction, all connected clients see the update immediately without manual refresh. I map the stream data using snapshot.docs.map() to convert Firestore documents to Transaction objects.
+
+Q7: Explain your error handling strategy in asynchronous operations.
+A: I use try-catch blocks around all async operations. In the repository layer, I catch exceptions and use debugPrint() for logging. In the UI layer, I check snapshot.hasError in StreamBuilder and display user-friendly error messages. For specific operations like adding transactions, I show SnackBar messages for success/failure. I also check if the context is still mounted before showing UI feedback to prevent memory leaks.
+
+Q8: How do you implement the filtering system with multiple criteria?
+A: I created a TransactionFilter model with optional parameters like dateMethod, paymentMethod, and transactionType. In the home screen, I build the filter dynamically based on user selections using _buildCurrentFilter() method. The filter is passed to getTransactions() which uses conditional logic to add where() clauses only when filter values are not null or "all". This allows for flexible combinations of filters.
+
+Q9: Explain the enum usage in your project and how you handle enum serialization.
+A: I use several enums: TransactionType (income, expense), TransactionPaymentMethod (tng, cash, bank), and TransactionFilterPaymentMethod. For Firestore storage, I use enum.name to get the string value. For deserialization, I use EnumType.values.firstWhere((e) => e.name == stringValue). This ensures type safety while maintaining Firestore compatibility.
+
+Q10: How do you manage navigation and pass data between screens?
+A: I use GoRouter with named routes. For data passing, I use queryParameters for simple data like isIncome and transactionId. In the route builder, I extract parameters using state.uri.queryParameters. For complex objects, I could use the extra parameter. The navigation structure uses pushNamed() for new screens and pop() to return to previous screens.
+
+Q11: Explain your chart implementation and data aggregation logic.
+A: In TransactionChart, I load categories first using getCategoriesByType(), then in _getCategoryData() I group transactions by category using a Map<String, double>. I iterate through transactions, get the category name from the loaded categories map, and sum up amounts for each category. The fl_chart PieChart widget takes this aggregated data and displays it with calculated percentages.
+
+Q12: How do you handle the TabController and bottom navigation synchronization?
+A: I use a TabController with SingleTickerProviderStateMixin in HomeScreen. I add a listener to _tabController that updates _selectedIndex when tabs change. In the BottomNavigationBar onTap, I call both setState() to update the selected index and _tabController.animateTo() to sync the tab view. This ensures both navigation methods work together.
+
+Q13: Explain your approach to form validation and user input handling.
+A: I use GlobalKey<FormState> for form validation with TextFormField widgets. I implement validator functions that return null for valid input or error messages for invalid input. For amount validation, I check if the input is a valid double and greater than zero. I use TextEditingController to manage input state and clear forms after successful submission.
+
+Q14: How do you implement the transaction deletion with confirmation dialog?
+A: I created a reusable ConfirmDeleteDialog widget that takes parameters like content, onConfirm callback, and confirmColor. When user long-presses a transaction, I show a bottom sheet with options. The delete option calls _confirmDelete() which shows the confirmation dialog. Only after user confirms, I call the repository's deleteTransaction() method and show a success SnackBar.
+
+Q15: Explain how you handle different screen sizes and responsive design.
+A: I use LayoutBuilder to get available screen constraints. In PieChartWidget, I calculate chart height based on available space using constraints.maxHeight. I use Flexible and Expanded widgets to make layouts responsive. For the pie chart legend, I set maxHeight constraints and use SingleChildScrollView for overflow handling. I also use MediaQuery for screen-dependent calculations.
+
+Q16: How do you manage collections and subcollections in Firestore?
+A: I structure data as users/{userId}/transactions and users/{userId}/categories. In TransactionRepoFirestore, I have a getter _transactionsCollection that dynamically gets the current user's ID and returns the correct collection reference. This ensures data isolation between users. I use doc() for document operations and add() for auto-generated IDs.
+
+Q17: Explain your singleton pattern implementation and why you used it.
+A: I implemented singleton pattern in both TransactionRepoFirestore and CategoryRepoFirestore. I create a static final instance _instance, make the constructor private with _init(), and provide a factory constructor that returns the same instance. This ensures only one instance exists throughout the app lifecycle, which is important for maintaining consistent database connections and avoiding duplicate operations.
+
+Q18: How do you handle the conversion between different data types in your models?
+A: In the Transaction model, I convert DateTime to ISO8601 string for Firestore storage using date.toIso8601String(). For retrieval, I use DateTime.parse(). For numeric values, I cast using (data['amount'] as num).toDouble() to handle both int and double from Firestore. For enums, I use the name property for storage and firstWhere() for retrieval with proper error handling.
+
+Q19: Explain the FutureBuilder vs StreamBuilder usage in your app.
+A: I use StreamBuilder for real-time data like transaction lists because I want automatic updates when data changes. I use FutureBuilder for one-time data fetching like getting category details for a single transaction in TransactionItem. StreamBuilder rebuilds when new data arrives, while FutureBuilder only executes once unless the future changes.
+
+Q20: How do you implement the category icon and color management system?
+A: Categories have icon and color fields stored as strings. For colors, I store hex values and use a getColorFromString() utility function to convert strings back to Color objects. For icons, I store asset paths and use Image.asset() with error handling. I provide a fallback Icon(Icons.category) when image loading fails. The icon selection UI shows a grid of available icons from the assets folder.
+
+Q21: Explain your approach to handling nullable values and null safety.
+A: I use Dart's null safety features with nullable types like String? for optional fields. In the Transaction model, note and id are nullable. I use null-aware operators like ?. and ?? for safe navigation. In UI code, I check for null before displaying data and provide fallback values. For example: category?.name ?? 'Unknown' ensures we always have a display value.
+
+Q22: How do you implement the filter state management across screen refreshes?
+A: In HomeScreen, I store filter state in class variables like _currentPaymentMethod and _currentTimeFilterType. These persist during the screen lifecycle. When filters change, I call setState() to rebuild the UI with new filter parameters. The _buildCurrentFilter() method combines all current filter states into a TransactionFilter object that's passed to the repository query.
+
+TECHNICAL IMPLEMENTATION DETAILS:
+================================
+
+Key Classes:
+- Transaction: Data model for financial transactions
+- Category: Data model for transaction categories
+- TransactionRepoFirestore: Handles database operations
+- TransactionFilter: Manages filtering logic
+- AuthNotifier: Manages authentication state
+
+Architecture Pattern:
+- Repository pattern for data access
+- Provider pattern for state management
+- Singleton pattern for repository instances
+
+Database Structure:
+users/{userId}/
+  ├── transactions/
+  │   ├── {transactionId}
+  │   └── ...
+  └── categories/
+      ├── {categoryId}
+      └── ...
+
+Color Scheme:
+- Primary: Deep purple theme
+- Income: Green colors
+- Expense: Red colors
+- Background: Light colors for readability
+
+Navigation Flow:
+Authentication → Home → Transactions/Categories → Analytics
+                   ↓
+              Add/Edit Screens
+
+Remember: Always speak confidently about your code and be prepared to show specific features during the demo!

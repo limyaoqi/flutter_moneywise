@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:moneywise/data/model/category.dart';
-import 'package:moneywise/data/model/transaction.dart';
 
 class CategoryRepoFirestore {
   static final CategoryRepoFirestore _instance = CategoryRepoFirestore._init();
@@ -33,11 +32,9 @@ class CategoryRepoFirestore {
     });
   }
 
-  Future<List<Category>> getCategoriesByType(TransactionType type) async {
-    final String typeString =
-        type == TransactionType.income ? 'income' : 'expense';
+  Future<List<Category>> getCategoriesByType(String type) async {
     final snapshot =
-        await _categoryCollection.where('type', isEqualTo: typeString).get();
+        await _categoryCollection.where('type', isEqualTo: type).get();
     return snapshot.docs.map((doc) {
       final data = doc.data();
       return Category.fromMap(data).copy(id: doc.id);

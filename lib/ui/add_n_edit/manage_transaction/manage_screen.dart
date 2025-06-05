@@ -48,7 +48,7 @@ class _ManageScreenState extends State<ManageScreen> {
 
     try {
       _categories = await categoryRepo.getCategoriesByType(
-        _isIncome ? TransactionType.income : TransactionType.expense,
+        _isIncome ? TransactionType.income.name : TransactionType.expense.name,
       );
 
       if (widget.transactionId != null) {
@@ -81,9 +81,7 @@ class _ManageScreenState extends State<ManageScreen> {
       _transaction = await transactionRepo.getTransactionById(
         widget.transactionId!,
       );
-      debugPrint(
-        'Loaded transaction: ${_transaction?.toMap()}',
-      );
+      debugPrint('Loaded transaction: ${_transaction?.toMap()}');
       if (_transaction != null) {
         _titleController.text = _transaction!.title;
         _amountController.text = _transaction!.amount.toString();
@@ -96,9 +94,9 @@ class _ManageScreenState extends State<ManageScreen> {
       }
     } catch (e) {
       // Handle error
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error loading transaction: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading transaction: $e')));
     } finally {
       setState(() {
         _isLoading = false;
@@ -162,7 +160,6 @@ class _ManageScreenState extends State<ManageScreen> {
   }
 
   // Helper method to get category color
- 
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +189,7 @@ class _ManageScreenState extends State<ManageScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Title Field
-                    TextField(
+                    TextField( 
                       controller: _titleController,
                       decoration: const InputDecoration(
                         labelText: 'Title',
@@ -275,86 +272,119 @@ class _ManageScreenState extends State<ManageScreen> {
                             border: Border.all(color: Colors.grey.shade300),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: _categories.isEmpty
-                              ? const Center(
-                                  child: Text('No categories available'),
-                                )
-                              : GridView.builder(
-                                  padding: const EdgeInsets.all(8),
-                                  shrinkWrap: true,
-                                  physics: const AlwaysScrollableScrollPhysics(),
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: MediaQuery.of(context).size.width > 600 ? 5 : 3,
-                                    crossAxisSpacing: 12,
-                                    mainAxisSpacing: 12,
-                                  ),
-                                  itemCount: _categories.length,
-                                  itemBuilder: (context, index) {
-                                    final category = _categories[index];
-                                    final isSelected = _selectedCategory?.id == category.id;
-
-                                    // Get color from category
-                                    Color categoryColor = getColorFromString(category.color);
-
-                                    return GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _selectedCategory = category;
-                                        });
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4.0),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: isSelected ? categoryColor : Colors.transparent,
-                                            width: 2,
-                                          ),
-                                          borderRadius: BorderRadius.circular(8),
-                                          color: isSelected ? categoryColor.withAlpha(10) : null,
+                          child:
+                              _categories.isEmpty
+                                  ? const Center(
+                                    child: Text('No categories available'),
+                                  )
+                                  : GridView.builder(
+                                    padding: const EdgeInsets.all(8),
+                                    shrinkWrap: true,
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount:
+                                              MediaQuery.of(
+                                                        context,
+                                                      ).size.width >
+                                                      600
+                                                  ? 5
+                                                  : 3,
+                                          crossAxisSpacing: 12,
+                                          mainAxisSpacing: 12,
                                         ),
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: categoryColor,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Center(
-                                                child: Image.asset(
-                                                  category.icon ?? '',
-                                                  width: 24,
-                                                  height: 24,
-                                                  color: Colors.white,
-                                                  errorBuilder: (context, error, stackTrace) {
-                                                    return const Icon(
-                                                      Icons.category,
-                                                      color: Colors.white,
-                                                      size: 24,
-                                                    );
-                                                  },
+                                    itemCount: _categories.length,
+                                    itemBuilder: (context, index) {
+                                      final category = _categories[index];
+                                      final isSelected =
+                                          _selectedCategory?.id == category.id;
+
+                                      // Get color from category
+                                      Color categoryColor = getColorFromString(
+                                        category.color,
+                                      );
+
+                                      return GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _selectedCategory = category;
+                                          });
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4.0),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color:
+                                                  isSelected
+                                                      ? categoryColor
+                                                      : Colors.transparent,
+                                              width: 2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            color:
+                                                isSelected
+                                                    ? categoryColor.withAlpha(
+                                                      10,
+                                                    )
+                                                    : null,
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                width: 40,
+                                                height: 40,
+                                                decoration: BoxDecoration(
+                                                  color: categoryColor,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Center(
+                                                  child: Image.asset(
+                                                    category.icon ?? '',
+                                                    width: 24,
+                                                    height: 24,
+                                                    color: Colors.white,
+                                                    errorBuilder: (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) {
+                                                      return const Icon(
+                                                        Icons.category,
+                                                        color: Colors.white,
+                                                        size: 24,
+                                                      );
+                                                    },
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              category.name,
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                                color: isSelected ? categoryColor : Colors.black87,
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                category.name,
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight:
+                                                      isSelected
+                                                          ? FontWeight.bold
+                                                          : FontWeight.normal,
+                                                  color:
+                                                      isSelected
+                                                          ? categoryColor
+                                                          : Colors.black87,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                              textAlign: TextAlign.center,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  },
-                                ),
+                                      );
+                                    },
+                                  ),
                         ),
                       ],
                     ),

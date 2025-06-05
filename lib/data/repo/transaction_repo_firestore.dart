@@ -198,7 +198,7 @@ class TransactionRepoFirestore implements TransactionRepo {
   }) async {
     Query<Map<String, dynamic>> query = _transactionsCollection.where(
       'transactionType',
-      isEqualTo: transactionType,
+      isEqualTo: transactionType.name,
     );
 
     // Apply date filters if provided

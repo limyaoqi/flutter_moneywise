@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:moneywise/data/repo/auth_repo.dart';
 import 'package:moneywise/ui/auth/auth_screen.dart';
 import 'package:moneywise/ui/home/home_screen.dart';
-import 'package:moneywise/ui/home/manage_transaction/manage_screen.dart';
+import 'package:moneywise/ui/add_n_edit/manage_transaction/manage_screen.dart';
+import 'package:moneywise/ui/add_n_edit/manage_category/manage_screen.dart';
+import 'package:moneywise/ui/analytics/analytics_screen.dart';
 
 class Navigation {
   static const initial = '/';
@@ -42,6 +44,22 @@ class Navigation {
           return ManageScreen(isIncome: isIncome, transactionId: transactionId);
         },
       ),
+      GoRoute(
+        path: '/manage_category',
+        name: Screens.manageCategory.name,
+        builder: (context, state) {
+          final categoryId = state.uri.queryParameters['categoryId'];
+          return CategoryManageScreen(categoryId: categoryId);
+        },
+      ),
+      GoRoute(
+        path: '/analytics',
+        name: Screens.analytics.name,
+        builder: (context, state) {
+          final user = state.extra as User?;
+          return AnalyticsScreen(user: user);
+        },
+      ),
     ],
   );
 }
@@ -64,4 +82,4 @@ class AuthNotifier extends ChangeNotifier {
   User? get user => _user;
 }
 
-enum Screens { home, login, manage }
+enum Screens { home, login, manage, manageCategory, analytics }

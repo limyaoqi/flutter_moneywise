@@ -55,8 +55,6 @@ class _CategoryAddState extends State<CategoryAdd> {
         type: _selectedType,
       );
 
-      // print('New Category: $newCategory'); // For debugging
-
       // Add the category to Firestore
       _categoryRepo
           .addCategory(newCategory)

@@ -5,12 +5,13 @@ import 'package:moneywise/data/model/transaction_filter.dart';
 import 'package:moneywise/data/repo/transaction_repo.dart';
 import 'package:moneywise/data/repo/transaction_repo_firestore.dart';
 import 'package:moneywise/theme/app_colors.dart';
-import 'package:moneywise/ui/category/category_screen.dart';
+import 'package:moneywise/ui/home/category/category_screen.dart';
 import 'package:moneywise/ui/home/expense/expense_screen.dart';
 import 'package:moneywise/ui/home/income/income_screen.dart';
 import 'package:moneywise/widget/filterbar/payment_filter_bar.dart';
 import 'package:moneywise/widget/filterbar/time_filter_bar.dart';
 import 'package:moneywise/widget/profile/user_avatar.dart';
+import 'package:moneywise/widget/analytics/totals_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   final User? user;
@@ -129,6 +130,8 @@ class _HomeScreenState extends State<HomeScreen>
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
         actions: [
+          TotalsWidget(user: widget.user),
+          const SizedBox(width: 8),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: UserAvatar(user: widget.user),

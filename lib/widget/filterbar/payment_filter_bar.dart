@@ -24,7 +24,7 @@ class _PaymentFilterBarState extends State<PaymentFilterBar> {
           children:
               _filters.map((filter) {
                 final isSelected = _selectedFilter == filter;
-                return Padding(
+                return Padding( 
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: FilterChip(
                     selected: isSelected,
